@@ -21,6 +21,7 @@
 */
 
 @use 'sass:math';
+@use './math_utils' as utils;
 
 /// 
 /// Color science utilities.
@@ -53,4 +54,34 @@
 /// measures relative luminance, a logarithmic scale.
 @function yFromLstar($lstar) {
     @return 100.0 * labInvf(math.div(($lstar + 16.0), 116.0));
+}
+
+/// Converts a color from XYZ to ARGB.
+@function argbFromXyz($x, $y, $z) {
+    $linearR: 3.2413774792388685 * $x + (-1.5376652402851851 * $y) + (-0.49885366846268053 * $z);
+    $linearG: -0.9691452513005321 * $x + 1.8758853451067872 * $y + 0.04156585616912061 * $z;
+    $linearB: 0.05562093689691305 * $x + (-0.20395524564742123 * $y) + 1.0571799111220335 * $z;
+    $r: delinearized($linearR);
+    $g: delinearized($linearG);
+    $b: delinearized($linearB);
+    @return argbFromRgb($r, $g, $b);
+}
+
+/// Delinearizes an RGB component.
+/// rgbComponent 0.0 <= rgb_component <= 100.0, represents linear R/G/B channel
+/// 0 <= output <= 255, color channel converted to regular RGB space
+@function delinearized($rgbComponent) {
+    $normalized: math.div($rgbComponent, 100.0);
+    $delinearized: 0.0;
+    @if $normalized <= 0.0031308 {
+        $delinearized: $normalized * 12.92;
+    } @else {
+        $delinearized: 1.055 * math.pow($normalized, math.div(1.0, 2.4)) - 0.055;
+    }
+    @return utils.clampInt(0, 255, math.round($delinearized * 255.0));
+}
+
+/// Converts a color from RGB components to ARGB format.
+@function argbFromRgb($red, $green, $blue) {
+    //TODO
 }
