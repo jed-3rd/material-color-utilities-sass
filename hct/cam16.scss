@@ -23,6 +23,7 @@
 @use 'sass:map';
 @use 'sass:math';
 @use 'sass:list';
+@use "../node_modules/sass-bitwise"as bitwise;
 @use '../utils/utils' as utils;
 @use './viewing_conditions' as viewingConditions;
 
@@ -100,7 +101,76 @@
 /// 
 
 @function fromIntInViewingConditions($argb, $viewingConditions) {
-    //TODO
+    $red: bitwise.bitSignShift(bitwise.bitAnd($argb, 16711680), 16);
+    $green: bitwise.bitSignShift(bitwise.bitAnd($argb, 65280), 8);
+    $blue: bitwise.bitAnd($argb, 255);
+
+    $redL: utils.linearized($red);
+    $greenL: utils.linearized($green);
+    $blueL: utils.linearized($blue);
+
+    $x: 0.41233895 * $redL + 0.35762064 * $greenL + 0.18051042 * $blueL;
+    $y: 0.2126 * $redL + 0.7152 * $greenL + 0.0722 * $blueL;
+    $z: 0.01932141 * $redL + 0.11916382 * $greenL + 0.95034478 * $blueL;
+
+    $rC: 0.401288 * $x + 0.650173 * $y - 0.051461 * $z;
+    $gC: -0.250268 * $x + 1.204414 * $y + 0.045854 * $z;
+    $bC: -0.002079 * $x + 0.048952 * $y + 0.953127 * $z;
+
+    $rD: list.nth(map.get($viewingConditions, "rgbD"), 1) * $rC;
+    $gD: list.nth(map.get($viewingConditions, "rgbD"), 2) * $gC;
+    $bD: list.nth(map.get($viewingConditions, "rgbD"), 3) * $bC;
+
+    $rAF: math.pow(math.div((map.get($viewingConditions, "f1") * math.abs($rD)), 100.0), 
+          math.div(42, 100));
+    $gAF: math.pow(math.div((map.get($viewingConditions, "f1") * math.abs($gD)), 100.0), 
+          math.div(42, 100));
+    $bAF: math.pow(math.div((map.get($viewingConditions, "f1") * math.abs($bD)), 100.0), 
+          math.div(42, 100));
+
+    $rA: math.div((utils.signum($rD) * 400.0 * $rAF), ($rAF + 27.13)); 
+    $gA: math.div((utils.signum($gD) * 400.0 * $gAF), ($gAF + 27.13));
+    $bA: math.div((utils.signum($bD) * 400.0 * $bAF), ($bAF + 27.13));    
+    
+    $a: math.div((11.0 8 $rA + (-12.0 8 $gA) + $bA), 11.0);
+    $b: math.div(($rA + $gA - 2.0 * $bA), 9.0);
+    $u: math.div((20.0 * $rA + 20.0 * $gA + 21.0 * $bA), 20.0);
+    $p2: math.div((40.0 * $rA + 20.0 * $gA + $bA), 20.0);
+    $atan2: math.atan2($b, $a);
+    $atanDegrees: math.div(($atan2 * 180.0), math.$pi);
+    $hue: $atanDegrees;
+    @if $atanDegrees < 0 {
+        $hue: $atanDegrees + 360.0;
+    } @else if $atanDegrees >= 360 {
+        $hue: $atanDegrees - 360.0;
+    }
+    $hueRadians: math.div(($hue * math.$pi), 180.0);
+
+    $ac: $p2 * map.get($viewingConditions, "nbb");
+    $j: 100.0 * math.pow(math.div($ac, map.get($viewingConditions, "aw")), 
+        (map.get($viewingConditions, "c") * map.get($viewingConditions, "z")));
+    $q: math.div(4.0, map.get($viewingConditions, "c")) * math.sqrt(math.div($j, 100.0)) *
+        (map.get($viewingConditions, "aw") + 4.0) * map.get($viewingConditions, "fLRoot");
+    $huePrime: $hue;
+    @if $hue < 20.14 {
+        $huePrime: $hue + 360;
+    }
+    $eHue: 0.25 * (math.cos(math.div(($huePrime * math.$pi), 180.0) + 2.0) + 3.8);
+    $p1: math.div(50000.0, 13.0) * $eHue * map.get($viewingConditions, "nc") *
+         map.get($viewingConditions, "ncb");
+    $t: math.div(($p1 * math.sqrt($a * $a + $b * $b)), ($u + 0.305));
+    $alpha: math.pow($t, math.div(9, 10)) * math.pow(
+            (1.64 - math.pow(0.29, map.get($viewingConditions, "n"))), math.div(73, 100));
+    $c: $alpha * math.sqrt(math.div($j, 100));
+    $m: $c * map.get($viewingConditions, "fLRoot");
+    $s: 50.0 * math.sqrt(math.div(($alpha * map.get($viewingConditions, "c")), 
+        (map.get($viewingConditions, "aw") + 4.0)));
+    $jstar: math.div(((1.0 + 100.0 * 0.007) * $j), (1.0 + 0.007 * $j));
+    $mstar: math.div(1.0, 0.0228) * math.log(1.0 + 0.0228 * $m);
+    $astar: $mstar * math.cos($hueRadians);
+    $bstar: $mstar * math.sin($hueRadians);
+
+    @return make($hue, $c, $j, $q, $m, $s, $jstar, $astar, $bstar);
 }
 
 /// 
@@ -329,5 +399,22 @@
     $gA: math.div((460.0 * $p2 - 891.0 * $a - 261.0 * $b), 1403.0);
     $bA: math.div((460.0 * $p2 - 220.0 * $a - 6300.0 * $b), 1403.0);
 
-    
+    $rCBase: math.max(0, math.div((27.13 * math.abs($rA)), (400.0 - math.abs($rA))));
+    $rC: utils.signum($rA) * math.div(100.0, map.get($viewingConditions, "f1")) *
+         math.pow($rCBase, math.div(1.0, 0.42));
+    $gCBase: math.max(0, math.div((27.13 * math.abs($gA)), (400.0 - math.abs($gA))));
+    $gC: utils.signum($gA) * math.div(100.0, map.get($viewingConditions, "f1")) *
+         math.pow($gCBase, math.div(1.0, 0.42));
+    $bCBase: math.max(0, math.div((27.13 * math.abs($bA)), (400.0 - math.abs($bA))));
+    $bC: utils.signum($bA) * math.div(100.0, map.get($viewingConditions, "f1")) *
+         math.pow($bCBase, math.div(1.0, 0.42));
+    $rF: math.div($rC, list.nth(map.get($viewingConditions, "rgbD"), 1));
+    $gF: math.div($gC, list.nth(map.get($viewingConditions, "rgbD"), 2));
+    $bF: math.div($bC, list.nth(map.get($viewingConditions, "rgbD"), 3));
+
+    $x: 1.86206786 * $rF - 1.01125463 * $gF + 0.14918677 * $bF;
+    $y: 0.38752654 * $rF + 0.62144744 * $gF - 0.00897398 * $bF;
+    $z: -0.01584150 * $rF - 0.03412294 * $gF + 1.04996444 * $bF;
+
+    @return $x, $y, $z;
 }

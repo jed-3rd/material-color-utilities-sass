@@ -21,6 +21,7 @@
 */
 
 @use 'sass:math';
+@use "../node_modules/sass-bitwise"as bitwise;
 @use './math_utils' as utils;
 
 /// 
@@ -83,5 +84,8 @@
 
 /// Converts a color from RGB components to ARGB format.
 @function argbFromRgb($red, $green, $blue) {
-    //TODO
+    @return bitwise.bitRShift((bitwise.bitOr(bitwise.bitOr(bitwise.bitLShift(255, 24), 
+            bitwise.bitLShift(bitwise.bitAnd($red, 255), 16)), 
+            bitwise.bitOr(bitwise.bitLShift(bitwise.bitAnd($green, 255), 8), 
+            bitwise.bitAnd($blue, 255)))), 0);
 }
