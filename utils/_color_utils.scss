@@ -82,6 +82,16 @@
     @return utils.clampInt(0, 255, math.round($delinearized * 255.0));
 }
 
+/// Linearizes an RGB Component.
+@function linearized($rgbComponent) {
+    $normalized: math.div($rgbComponent, 255.0);
+    @if $normalized <= 0.040449936 {
+        @return math.div($normalized, 12.92) * 100.0;
+    } @else {
+        @return math.pow(math.div(($normalized + 0.055), 1.055), 2.4) * 100.0;
+    }
+}
+
 /// Converts a color from RGB components to ARGB format.
 @function argbFromRgb($red, $green, $blue) {
     @return bitwise.bitRShift((bitwise.bitOr(bitwise.bitOr(bitwise.bitLShift(255, 24), 

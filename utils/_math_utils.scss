@@ -62,3 +62,8 @@
     
     @return $input;
 }
+
+/// Removes SASS's math units from a number.
+@function stripUnits($number) {
+    @return math.div($number, ($number * 0 + 1));
+}
