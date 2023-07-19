@@ -110,6 +110,6 @@
     $bA: math.div((400.0 * $bAF), ($bAF + 27.13));
     $aw: (2.0 * $rA + $gA + 0.05 * $bA) * $nbb;
     $fLRoot: math.pow($f1, math.div(1, 4));
-    $viewingconditions: $n, $aw, $nbb, $ncb, $c, $nc, $rgbD, $f1, $fLRoot, $z;
-    @return $viewingconditions;
+    @return ("n": $n, "aw": $aw, "nbb": $nbb, "ncb": $ncb, "c": $c, "nc": $nc,
+             "rgbD": $rgbD, "f1": $f1, "fLRoot": $fLRoot, "z": $z);
 }
