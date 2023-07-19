@@ -1,0 +1,115 @@
+/*
+ * @license
+ * Copyright 2023 Jed
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ * 
+ * Based on the work of Material Foundation.
+ * 
+ * https://github.com/material-foundation/material-color-utilities
+*/
+
+@use 'sass:math';
+@use 'sass:list';
+@use '../utils/utils' as utils;
+
+///
+/// In traditional color spaces, a color can be identified solely by the
+/// observer's measurement of the color. Color appearance models such as CAM16
+/// also use information about the environment where the color was
+/// observed, known as the viewing conditions.
+/// 
+/// For example, white under the traditional assumption of a midday sun white
+/// point is accurately measured as a slightly chromatic blue by CAM16. (roughly,
+/// hue 203, chroma 3, lightness 100)
+///
+/// This class caches intermediate values of the CAM16 conversion process that
+/// depend only on viewing conditions, enabling speed ups.
+///
+
+///
+/// Create ViewingConditions from a simple, physically relevant, set of
+/// parameters.
+///
+/// $whitePoint - White point, measured in the XYZ color space.
+///     default = D65, or sunny day afternoon
+/// $adaptingLuminance - The luminance of the adapting field. Informally,
+///     how bright it is in the room where the color is viewed. Can be
+///     calculated from lux by multiplying lux by 0.0586. default = 11.72,
+///     or 200 lux.
+/// $backgroundLstar - The lightness of the area surrounding the color.
+///     measured by L* in L*a*b*. default = 50.0
+/// $surround - A general description of the lighting surrounding the
+///     color. 0 is pitch dark, like watching a movie in a theater. 1.0 is a
+///     dimly light room, like watching TV at home at night. 2.0 means there
+///     is no difference between the lighting on the color and around it.
+///     default = 2.0
+/// $discountingIlluminant - Whether the eye accounts for the tint of the
+///     ambient lighting, such as knowing an apple is still red in green light.
+///     default = false, the eye does not perform this process on
+///     self-luminous objects like displays.
+///
+
+@function make(
+        $whitePoint: utils.whitePointD65(), 
+        $adaptingLuminance: math.div(math.div(200.0, math.$pi) * utils.yFromLstar(50.0), 100.0), 
+        $backgroundLstar: 50.0, 
+        $surround: 2.0, 
+        $discountingIlluminant: false
+    ) {
+    $xyz: $whitePoint;
+    $rW: list.nth($xyz, 1) *  0.401288 + list.nth($xyz, 2) * 0.650173 + list.nth($xyz, 3) * (-0.051461);
+    $gW: list.nth($xyz, 1) * (-0.250268) + list.nth($xyz, 2) * 1.204414 + list.nth($xyz, 3) * 0.045854;
+    $bW: list.nth($xyz, 1) * (-0.002079) + list.nth($xyz, 2) * 0.048952 + list.nth($xyz, 3) * 0.953127;
+    $f: math.div($surround, 10.0) + 0.8;
+    @debug $f;
+    $c: utils.lerp(0.525, 0.59, ($f - 0.8) * 10.0);
+    @if $f >= 0.9 {
+        $c: utils.lerp(0.59, 0.69, ($f - 0.9) * 10.0);
+    }
+    $d: 1.0;
+    @if not $discountingIlluminant {
+        $d: $f * (1.0 - math.div(1.0, 3.6) * math.pow(math.$e, math.div(((-1 * $adaptingLuminance) - 42.0), 92.0)));
+    }
+    @if $d > 1.0 {
+        $d: 1.0;
+    } @else {
+        @if $d < 0.0 {
+            $d: 0.0;
+        }
+    }
+    $nc: $f;
+    $rD: $d * math.div(100.0, $rW) + 1.0 - $d;
+    $gD: $d * math.div(100.0, $gW) + 1.0 - $d;
+    $bD: $d * math.div(100.0, $bW) + 1.0 - $d;
+    $rgbD: $rD, $gD, $bD;
+    $k: math.div(1.0, (5.0 * $adaptingLuminance + 1.0));
+    $k4: $k * $k * $k * $k;
+    $k4F: 1.0 - $k4;
+    $f1: $k4 * $adaptingLuminance + 0.1 * $k4F * $k4F * utils.cbrt(5.0 * $adaptingLuminance);
+    $n: math.div(utils.yFromLstar($backgroundLstar), list.nth($whitePoint, 2));
+    $z: 1.48 + math.sqrt($n);
+    $nbb: math.div(0.725, math.pow($n, math.div(1, 5)));
+    $ncb: $nbb;
+    $rAF: math.pow(math.div(($f1 * $rD * $rW), 100), 0.42);
+    $gAF: math.pow(math.div(($f1 * $gD * $gW), 100), 0.42);
+    $bAF: math.pow(math.div(($f1 * $bD * $bW), 100), 0.42);
+    $rA: math.div((400.0 * $rAF), ($rAF + 27.13));
+    $gA: math.div((400.0 * $gAF), ($gAF + 27.13));
+    $bA: math.div((400.0 * $bAF), ($bAF + 27.13));
+    $aw: (2.0 * $rA + $gA + 0.05 * $bA) * $nbb;
+    $fLRoot: math.pow($f1, math.div(1, 4));
+    $viewingconditions: $n, $aw, $nbb, $ncb, $c, $nc, $rgbD, $f1, $fLRoot, $z;
+    @return $viewingconditions;
+}
