@@ -21,6 +21,7 @@
 */
 
 @use 'sass:math';
+@use 'sass:list';
 @use "../node_modules/sass-bitwise"as bitwise;
 @use './math_utils' as utils;
 
@@ -98,4 +99,21 @@
             bitwise.bitLShift(bitwise.bitAnd($red, 255), 16)), 
             bitwise.bitOr(bitwise.bitLShift(bitwise.bitAnd($green, 255), 8), 
             bitwise.bitAnd($blue, 255)))), 0);
+}
+
+/// Converts a color from linear RGB components to ARGB format.
+@function argbFromLinrgb($linrgb) {
+    $r: delinearized(list.nth($linrgb, 1));
+    $g: delinearized(list.nth($linrgb, 2));
+    $b: delinearized(list.nth($linrgb, 3));
+    @return argbFromRgb($r, $g, $b);
+}
+
+/// Converts an L* value to an ARGB representation.
+/// Takes parameter lstar, L* in L*a*b*.
+/// Returns ARGB representation of grayscale color with lightness matching L*.
+@function argbFromLstar($lstar) {
+    $y: yFromLstar($lstar);
+    $component: delinearized($y);
+    @return argbFromRgb($component, $component, $component);
 }

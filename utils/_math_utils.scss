@@ -21,6 +21,7 @@
 */
 
 @use 'sass:math';
+@use 'sass:list';
 
 /// 
 /// Utility methods for mathematical operations.
@@ -66,4 +67,25 @@
 /// Removes SASS's math units from a number.
 @function stripUnits($number) {
     @return math.div($number, ($number * 0 + 1));
+}
+
+/// Multiplies a 1x3 row vector with a 3x3 matrix.
+@function matrixMultiply($row, $matrix) {
+    $a: list.nth($row, 1) * list.nth(list.nth($matrix, 1), 1) + list.nth($row, 2) * 
+        list.nth(list.nth($matrix, 1), 2) + list.nth($row, 3) * list.nth(list.nth($matrix, 1), 3);
+    $b: list.nth($row, 1) * list.nth(list.nth($matrix, 2), 1) + list.nth($row, 2) * 
+        list.nth(list.nth($matrix, 2), 2) + list.nth($row, 3) * list.nth(list.nth($matrix, 2), 3);
+    $c: list.nth($row, 1) * list.nth(list.nth($matrix, 3), 1) + list.nth($row, 2) * 
+        list.nth(list.nth($matrix, 3), 2) + list.nth($row, 3) * list.nth(list.nth($matrix, 3), 3);
+    @return $a, $b, $c;
+}
+
+/// Sanitizes a degree measure as a floating-point number.
+/// Returns a degree measure between 0.0 (inclusive) and 360.0 (exclusive).
+@function sanitizeDegreesDouble($degrees) {
+    $degrees: $degrees % 360.0;
+    @if $degrees < 0 {
+        $degrees: $degrees + 360.0;
+    }
+    @return $degrees;
 }
