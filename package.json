@@ -1,0 +1,32 @@
+{
+  "name": "material-color-utilities-sass",
+  "version": "1.0.0",
+  "description": "SASS Color library for Material You",
+  "main": "_index.scss",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jed-3rd/material-color-utilities-sass.git"
+  },
+  "keywords": [
+    "sass",
+    "libsass",
+    "material",
+    "material-you",
+    "material3",
+    "material-color-utilities",
+    "material-design",
+    "material-foundation",
+    "m3",
+    "ct",
+    "cam16"
+  ],
+  "author": "JED-3rd",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/jed-3rd/material-color-utilities-sass/issues"
+  },
+  "homepage": "https://github.com/jed-3rd/material-color-utilities-sass#readme",
+  "dependencies": {
+    "sass-bitwise": "^1.0.0"
+  }
+}
