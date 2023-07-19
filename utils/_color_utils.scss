@@ -21,7 +21,10 @@
 */
 
 @use 'sass:math';
+<<<<<<< HEAD
 @use 'sass:list';
+=======
+>>>>>>> 93ab17723029f4d44ea224a369f73b72d2a14d64
 @use "../node_modules/sass-bitwise"as bitwise;
 @use './math_utils' as utils;
 
@@ -99,6 +102,7 @@
             bitwise.bitLShift(bitwise.bitAnd($red, 255), 16)), 
             bitwise.bitOr(bitwise.bitLShift(bitwise.bitAnd($green, 255), 8), 
             bitwise.bitAnd($blue, 255)))), 0);
+<<<<<<< HEAD
 }
 
 /// Converts a color from linear RGB components to ARGB format.
@@ -117,3 +121,6 @@
     $component: delinearized($y);
     @return argbFromRgb($component, $component, $component);
 }
+=======
+}
+>>>>>>> 93ab17723029f4d44ea224a369f73b72d2a14d64
