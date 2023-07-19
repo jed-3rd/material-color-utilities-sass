@@ -132,12 +132,11 @@
     $gA: math.div((utils.signum($gD) * 400.0 * $gAF), ($gAF + 27.13));
     $bA: math.div((utils.signum($bD) * 400.0 * $bAF), ($bAF + 27.13));    
     
-    $a: math.div((11.0 8 $rA + (-12.0 8 $gA) + $bA), 11.0);
+    $a: math.div((11.0 * $rA + (-12.0 * $gA) + $bA), 11.0);
     $b: math.div(($rA + $gA - 2.0 * $bA), 9.0);
     $u: math.div((20.0 * $rA + 20.0 * $gA + 21.0 * $bA), 20.0);
     $p2: math.div((40.0 * $rA + 20.0 * $gA + $bA), 20.0);
-    $atan2: math.atan2($b, $a);
-    $atanDegrees: math.div(($atan2 * 180.0), math.$pi);
+    $atanDegrees: utils.stripUnits(math.atan2($b, $a));
     $hue: $atanDegrees;
     @if $atanDegrees < 0 {
         $hue: $atanDegrees + 360.0;
@@ -188,7 +187,7 @@
 /// 
 
 @function fromJchInViewingConditions($j, $c, $h, $viewingConditions) {
-    $q: math.div(4.0, map.get($viewingConditions, "c")) * math.sqrt($j, 100.0) * 
+    $q: math.div(4.0, map.get($viewingConditions, "c")) * math.sqrt(math.div($j, 100.0)) * 
         (map.get($viewingConditions, "aw") + 4.0) * map.get($viewingConditions, "fLRoot");
     $m: $c * map.get($viewingConditions, "fLRoot");
     $alpha: math.div($c, math.sqrt(math.div($j, 100.0)));
@@ -220,9 +219,9 @@
     $a: $astar;
     $b: $bstar;
     $m: math.sqrt($a * $a + $b * $b);
-    $M: math.div((math.exp($m * 0.0228) - 1.0), 0.0228);
+    $M: math.div((math.pow(math.$e, $m * 0.0228) - 1.0), 0.0228);
     $c: math.div($M, map.get($viewingConditions, "fLRoot"));
-    $h: math.atan2($b, $a) * math.div(180.0, math.$pi);
+    $h: utils.stripUnits(math.atan2($b, $a));
     @if $h < 0.0 {
         $h: $h + 360.0;
     }
@@ -235,8 +234,8 @@
 /// which are near-identical to the default viewing conditions for sRGB.
 /// 
 
-@function toInt() {
-    @return viewed(viewingConditions.make());
+@function toInt($current) {
+    @return viewed($current, viewingConditions.make());
 }
 
 ///
@@ -305,9 +304,9 @@
     $bD: list.nth(map.get($viewingConditions, "rgbD"), 3) * $bC;
 
     // Chromatic adaptation
-    $rAF: math.pow(math.get($viewingConditions, "f1") * math.div(math.abs($rD), 100.0), math.div(42, 100));
-    $gAF: math.pow(math.get($viewingConditions, "f1") * math.div(math.abs($gD), 100.0), math.div(42, 100));
-    $bAF: math.pow(math.get($viewingConditions, "f1") * math.div(math.abs($bD), 100.0), math.div(42, 100));
+    $rAF: math.pow(map.get($viewingConditions, "f1") * math.div(math.abs($rD), 100.0), math.div(42, 100));
+    $gAF: math.pow(map.get($viewingConditions, "f1") * math.div(math.abs($gD), 100.0), math.div(42, 100));
+    $bAF: math.pow(map.get($viewingConditions, "f1") * math.div(math.abs($bD), 100.0), math.div(42, 100));
     $rA: math.div((utils.signum($rD) * 400.0 * $rAF), ($rAF + 27.13));
     $gA: math.div((utils.signum($gD) * 400.0 * $gAF), ($gAF + 27.13));
     $bA: math.div((utils.signum($bD) * 400.0 * $bAF), ($bAF + 27.13));
@@ -322,8 +321,7 @@
     $p2: math.div((40.0 * $rA + 20.0 * $gA + $bA), 20.0);
 
     // hue
-    $atan2: math.atan2($b, $a);
-    $atanDegrees: math.div(($atan2 * 180.0), math.$pi);
+    $atanDegrees: utils.stripUnits(math.atan2($b, $a));
     $hue: 0;
     @if $atanDegrees < 0 {
         $hue: $atanDegrees + 360.0;
@@ -392,7 +390,7 @@
     $hSin: math.sin($hRad);
     $hCos: math.cos($hRad);
 
-    $gamma: 23.0 * ($p2 + 0.305) * math.div($t, (23.0 * $p1 + 11 * $t * $hCos + 108.0 $t * $hSin));
+    $gamma: 23.0 * ($p2 + 0.305) * math.div($t, (23.0 * $p1 + 11 * $t * $hCos + 108.0 * $t * $hSin));
     $a: $gamma * $hCos;
     $b: $gamma * $hSin;
     $rA: math.div((460.0 * $p2 + 451.0 * $a + 288.0 * $b), 1403.0);
