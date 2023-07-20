@@ -21,10 +21,7 @@
 */
 
 @use 'sass:math';
-<<<<<<< HEAD
 @use 'sass:list';
-=======
->>>>>>> 93ab17723029f4d44ea224a369f73b72d2a14d64
 
 /// 
 /// Utility methods for mathematical operations.
@@ -71,7 +68,6 @@
 @function stripUnits($number) {
     @return math.div($number, ($number * 0 + 1));
 }
-<<<<<<< HEAD
 
 /// Multiplies a 1x3 row vector with a 3x3 matrix.
 @function matrixMultiply($row, $matrix) {
@@ -93,5 +89,3 @@
     }
     @return $degrees;
 }
-=======
->>>>>>> 93ab17723029f4d44ea224a369f73b72d2a14d64

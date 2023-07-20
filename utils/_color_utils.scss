@@ -21,10 +21,7 @@
 */
 
 @use 'sass:math';
-<<<<<<< HEAD
 @use 'sass:list';
-=======
->>>>>>> 93ab17723029f4d44ea224a369f73b72d2a14d64
 @use "../node_modules/sass-bitwise"as bitwise;
 @use './math_utils' as utils;
 
@@ -34,6 +31,12 @@
 /// Utility methods for color science constants and color space
 /// conversions that aren't HCT or CAM16.
 /// 
+
+$SRGB_TO_XYZ: (
+    (0.41233895, 0.35762064, 0.18051042),
+    (0.2126, 0.7152, 0.0722),
+    (0.01932141, 0.11916382, 0.95034478)
+);
 
 /// Returns the standard white point; white on a sunny day.
 @function whitePointD65() {
@@ -102,7 +105,6 @@
             bitwise.bitLShift(bitwise.bitAnd($red, 255), 16)), 
             bitwise.bitOr(bitwise.bitLShift(bitwise.bitAnd($green, 255), 8), 
             bitwise.bitAnd($blue, 255)))), 0);
-<<<<<<< HEAD
 }
 
 /// Converts a color from linear RGB components to ARGB format.
@@ -121,6 +123,52 @@
     $component: delinearized($y);
     @return argbFromRgb($component, $component, $component);
 }
-=======
+
+/// Computes the L* value of a color in ARGB representation.
+/// Takes parameter ARGB representation of a color.
+/// Returns L*, from L*a*b*, coordinate of the color.
+@function lstarFromArgb($argb) {
+    $y: list.nth(xyzFromArgb($argb), 2);
+    @return 116.0 * labF(math.div($y, 100.0)) - 16.0;
 }
->>>>>>> 93ab17723029f4d44ea224a369f73b72d2a14d64
+
+@function labF($t) {
+    $e: math.div(216.0, 24389.0);
+    $kappa: math.div(24389.0, 27.0);
+    @if $t > $e {
+        @return math.pow($t, math.div(1.0, 3.0));
+    } @else {
+        @return math.div(($kappa * $t + 16), 116);
+    }
+}
+
+/// Converts a color from XYZ to ARGB.
+@function xyzFromArgb($argb) {
+    $r: linearized(redFromArgb($argb));
+    $g: linearized(greenFromArgb($argb));
+    $b: linearized(blueFromArgb($argb));
+    @return utils.matrixMultiply(($r, $g, $b), $SRGB_TO_XYZ);
+}
+
+/// Returns the red component of a color in ARGB format.
+@function redFromArgb($argb) {
+    @return bitwise.bitAnd(bitwise.bitSignShift($argb, 16), 255);
+}
+
+/// Returns the green component of a color in ARGB format.
+@function greenFromArgb($argb) {
+    @return bitwise.bitAnd(bitwise.bitSignShift($argb, 8), 255);
+}
+
+/// Returns the blue component of a color in ARGB format.
+@function blueFromArgb($argb) {
+    @return bitwise.bitAnd($argb, 255);
+}
+
+/// Converts a Y value to an L* value.
+/// L* in L*a*b* and Y in XYZ measure the same quantity, luminance.
+/// L* measures perceptual luminance, a linear scale. Y in XYZ
+/// measures relative luminance, a logarithmic scale.
+@function lstarFromY($y) {
+    @return labF(math.div($y, 100.0)) * 116.0 - 16.0;
+}

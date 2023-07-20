@@ -20,9 +20,12 @@
  * https://github.com/material-foundation/material-color-utilities
 */
 
+@use 'sass:map';
+@use 'sass:list';
 @use '../utils/utils' as utils;
 @use './viewing_conditions' as viewingConditions;
 @use './cam16' as cam16;
+@use './hct_solver' as hctSolver;
 
 /// 
 /// A color system built using CAM16 hue and chroma, and L* from L*a*b*.
@@ -45,6 +48,14 @@
 /// will appear as in different lighting environments.
 /// 
 
+@function make($argb) {
+    $cam: cam16.fromInt($argb);
+    $hue: map.get($cam, "hue");
+    $chroma: map.get($cam, "chroma");
+    $tone: utils.lstarFromArgb($argb);
+    @return ("argb": $argb, "hue": $hue, "chroma": $chroma, "tone": $tone);
+}
+
 ///
 /// Parameter Hue: 0 <= hue < 360; invalid values are corrected.
 /// Parameter Chroma: 0 <= chroma < ?; Informally, colorfulness. The color returned
@@ -55,9 +66,53 @@
 /// 
 
 @function from($hue, $chroma, $tone) {
-    @return make();
+    @return make(hctSolver.solveToInt($hue, $chroma, $tone));
 }
 
-@function make() {
+///
+/// Takes in ARGB representation of a color. Returns HCT representation of a color in 
+/// default viewing conditions.
+/// 
 
+@function fromInt($argb) {
+    @return make($argb);
+}
+
+///
+/// Translates a color into different [ViewingConditions].
+/// 
+/// Colors change appearance. They look different with lights on versus off,
+/// the same color, as in hex code, on white looks different when on black.
+/// This is called color relativity, most famously explicated by Josef Albers
+/// in Interaction of Color.
+/// 
+/// In color science, color appearance models can account for this and
+/// calculate the appearance of a color in different settings. HCT is based on
+/// CAM16, a color appearance model, and uses it to make these calculations.
+/// 
+/// See [ViewingConditions.make] for parameters affecting color appearance.
+/// 
+
+@function inViewingConditions($hct, $vc) {
+    // 1. Use CAM16 to find XYZ coordinates of color in specified VC.
+    $cam: cam16.fromInt(map.get($hct, "argb"));
+    $viewedInVc: cam16.xyzInViewingCondtions($cam, $vc);
+
+    // 2. Create CAM16 of those XYZ coordinates in default VC.
+    $recastInVc: cam16.fromXyzInViewingConditions(
+        list.nth($viewedInVc, 1),
+        list.nth($viewedInVc, 2),
+        list.nth($viewedInVc, 3),
+        ViewingConditions.make()
+    );
+
+    // 3. Create HCT from:
+    // - CAM16 using default VC with XYZ coordinates in specified VC.
+    // - L* converted from Y in XYZ coordinates in specified VC.
+    $recastHct: from(
+        map.get($recastInVc, "hue"),
+        map.get($recastInVc, "chroma"),
+        utils.lstarFromY(list.nth($viewedInVc, 2))
+    );
+    @return $recastHct;
 }

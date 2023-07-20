@@ -427,8 +427,8 @@ $CRITICAL_PLANES: (
             $alpha: math.div($chroma, math.sqrt($jNormalized));
         }
         $t: math.pow(($alpha * $tInnerCoeff),math.div(1.0, 0.9));
-        $ac: map.get($viewingConditions, "aw") * math.pow($jNormalized, math.div(1.0, 
-             math.div(map.get($viewingConditions, "c"), map.get($viewingConditions, "z"))));
+        $ac: map.get($viewingConditions, "aw") * math.pow($jNormalized,
+             math.div(math.div(1.0, map.get($viewingConditions, "c")), map.get($viewingConditions, "z")));
         $p2: math.div($ac, map.get($viewingConditions, "nbb"));
         $gamma: 23.0 * ($p2 + 0.305) * math.div($t, (23.0 * $p1 + 11 * $t * $hCos + 108.0 * $t * $hSin));
         $a: $gamma * $hCos;
@@ -451,7 +451,7 @@ $CRITICAL_PLANES: (
         @if $fnj <= 0 {
             @return 0;
         }
-        @if $iterationRound == 4 or math.abs($fnj - $y) < 0.002 {
+        @if $iterationRound == 5 or math.abs($fnj - $y) < 0.002 {
             @if list.nth($linrgb, 1) > 100.01 or list.nth($linrgb, 2) > 100.01 or list.nth($linrgb, 3) > 100.01 {
                 @return 0;
             }
@@ -459,7 +459,7 @@ $CRITICAL_PLANES: (
         }
         // Iterates with Newton method,
         // Using 2 * fn(j) / j as the approximation of fn'(j)
-        $j: $j - ($fnj - $y) * math.div($j, (2 * $fnj));
+        $j: $j - math.div((($fnj - $y) * $j), (2 * $fnj));
     }
     @return 0;
 }
@@ -478,7 +478,7 @@ $CRITICAL_PLANES: (
     }
     $hueDegrees: utils.sanitizeDegreesDouble($hueDegrees);
     $hueRadians: math.div($hueDegrees, 180) * math.$pi;
-    $y: utils.yFromLStar($lstar);
+    $y: utils.yFromLstar($lstar);
     $exactAnswer: findResultByJ($hueRadians, $chroma, $y);
     @if $exactAnswer != 0 {
         @return $exactAnswer;
