@@ -89,3 +89,27 @@
     }
     @return $degrees;
 }
+
+/// Distance of two points on a circle, represented using degrees.
+@function differenceDegrees($a, $b) {
+    @return 180.0 - math.abs(math.abs($a - $b) - 180.0);
+}
+
+/// Sign of direction change needed to travel from one angle to another.
+/// 
+/// For angles that are 180 degrees apart from each other, both directions
+/// have the same travel distance, so either direction is shortest.
+/// The value 1.0 is returned in this case.
+/// 
+/// Takes 2 parameters. from, the angle travel starts from, in degrees; to, the
+/// angle travel ends at, in degrees. Returns -1 if decreasing from leads to the 
+/// shortest travel distance, 1 if increasing from leads to the shortest travel
+/// distance.
+@function rotationDirection($from, $to) {
+    $increasingDifference: sanitizeDegreesDouble($to - $from);
+    @if $increasingDifference <= 180.0 {
+        @return 1.0;
+    } @else {
+        @return -1.0;
+    }
+}
