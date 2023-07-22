@@ -53,8 +53,20 @@
 }
 
 /// Clamps an integer between two integers.
-/// return input when min <= input <= max, and either min or max otherwise.
+/// Return input when min <= input <= max, and either min or max otherwise.
 @function clampInt($min, $max, $input) {
+    @if $input < $min {
+        @return $min;
+    } @else if $input > $max {
+        @return $max;
+    }
+    
+    @return $input;
+}
+
+/// Clamps an integer between two floating-point numbers.
+/// Return input when min <= input <= max, and either min or max otherwise.
+@function clampDouble($min, $max, $input) {
     @if $input < $min {
         @return $min;
     } @else if $input > $max {
@@ -110,6 +122,6 @@
     @if $increasingDifference <= 180.0 {
         @return 1.0;
     } @else {
-        @return -1.0;
+        @return -1
     }
 }
